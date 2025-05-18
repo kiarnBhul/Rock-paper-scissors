@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors | Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>RPS Game</h2>
+            </div>
+            <ul class="nav-links">
+                <li class="active">
+                    <a href="#">
+                        <i class="fas fa-gamepad"></i>
+                        <span>Play</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-trophy"></i>
+                        <span>Leaderboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Stats</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="welcome-message">
+                    <h2>Rock Paper Scissors</h2>
+                    <p>Welcome back, Player!</p>
+                </div>
+            </header>
+            
+            <div class="dashboard-content">
+                <div class="game-area">
+                    <div class="game-header">
+                        <h3>Let's Play!</h3>
+                        <div class="score-display">
+                            <div class="score-item">
+                                <span class="score-label">You</span>
+                                <span class="score-value" id="playerScore">0</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">Computer</span>
+                                <span class="score-value" id="computerScore">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="game-controls">
+                        <div class="choice-buttons">
+                            <button class="choice-btn" id="rock">
+                                <i class="fas fa-hand-rock"></i>
+                                <span>Rock</span>
+                            </button>
+                            <button class="choice-btn" id="paper">
+                                <i class="fas fa-hand-paper"></i>
+                                <span>Paper</span>
+                            </button>
+                            <button class="choice-btn" id="scissors">
+                                <i class="fas fa-hand-scissors"></i>
+                                <span>Scissors</span>
+                            </button>
+                        </div>
+                        <div class="game-result" id="gameResult">
+                            <p>Choose your move to start the game!</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-cards">
+                    <div class="card">
+                        <div class="card-info">
+                            <h3>Total Games</h3>
+                            <h2>-</h2>
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-gamepad"></i>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-info">
+                            <h3>Win Rate</h3>
+                            <h2>-</h2>
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-info">
+                            <h3>Ranking</h3>
+                            <h2>-</h2>
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-info">
+                            <h3>Highest Streak</h3>
+                            <h2>-</h2>
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Move Distribution</h3>
+                        </div>
+                        <div class="chart" id="movesChart">
+                            <!-- Chart placeholder -->
+                            <div class="chart-placeholder">
+                                <i class="fas fa-chart-bar"></i>
+                                <p>Chart will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Win/Loss Ratio</h3>
+                        </div>
+                        <div class="chart" id="resultsChart">
+                            <!-- Chart placeholder -->
+                            <div class="chart-placeholder">
+                                <i class="fas fa-chart-pie"></i>
+                                <p>Chart will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recent-activity">
+                    <div class="section-header">
+                        <h3>Recent Games</h3>
+                    </div>
+                    <div class="activity-list">
+                        <!-- Empty activity list as placeholder -->
+                        <div class="empty-state">
+                            <i class="fas fa-history"></i>
+                            <p>Your game history will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html> 
