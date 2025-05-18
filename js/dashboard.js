@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {string} result - The result of the round
      */
     function updateGameResult(playerChoice, computerChoice, result) {
-        // Create result container with enhanced design
+        // Create result container with enhanced design and improved layout
         let resultHTML = `
         <div class="result-container page-transition">
             <div class="result-header">
@@ -178,12 +178,11 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="choices-display">
                 <div class="choice-display player">
-                    <div class="choice-icon ${playerChoice}">
+                    <div class="choice-icon ${playerChoice}" style="background: linear-gradient(135deg, ${getColorForChoice(playerChoice, 'light')}, ${getColorForChoice(playerChoice, 'dark')});">
                         <i class="fas fa-hand-${playerChoice}"></i>
                     </div>
                     <div class="choice-label">
-                        <span class="choice-owner">You</span>
-                        <span class="choice-text">chose <strong>${playerChoice}</strong></span>
+                        <span class="choice-text">You: <strong>${playerChoice}</strong></span>
                     </div>
                 </div>
                 <div class="versus-container">
@@ -191,12 +190,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="versus-line"></div>
                 </div>
                 <div class="choice-display computer">
-                    <div class="choice-icon ${computerChoice}">
+                    <div class="choice-icon ${computerChoice}" style="background: linear-gradient(135deg, ${getColorForChoice(computerChoice, 'light')}, ${getColorForChoice(computerChoice, 'dark')});">
                         <i class="fas fa-hand-${computerChoice}"></i>
                     </div>
                     <div class="choice-label">
-                        <span class="choice-owner">Computer</span>
-                        <span class="choice-text">chose <strong>${computerChoice}</strong></span>
+                        <span class="choice-text">Computer: <strong>${computerChoice}</strong></span>
                     </div>
                 </div>
             </div>
@@ -212,15 +210,39 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add animation classes after a short delay
             setTimeout(() => {
                 const icons = gameResultEl.querySelectorAll('.choice-icon');
-                icons.forEach(icon => icon.classList.add('animated'));
+                icons.forEach(icon => {
+                    icon.classList.add('animated');
+                    icon.style.animation = 'bounceIn 0.6s cubic-bezier(0.47, 0, 0.745, 0.715) forwards';
+                });
                 
                 const resultAnimation = gameResultEl.querySelector('.result-animation');
-                if (resultAnimation) resultAnimation.classList.add('animated');
+                if (resultAnimation) {
+                    resultAnimation.style.opacity = '1';
+                    resultAnimation.style.transform = 'scale(1)';
+                }
                 
                 const versusCircle = gameResultEl.querySelector('.versus-circle');
-                if (versusCircle) versusCircle.classList.add('animated');
+                if (versusCircle) {
+                    versusCircle.style.animation = 'pulse 1.5s infinite';
+                }
             }, 100);
         }
+    }
+    
+    /**
+     * Get the appropriate color for each choice
+     * @param {string} choice - The choice (rock, paper, scissors)
+     * @param {string} shade - Whether to get the light or dark shade
+     * @returns {string} The color in hex format
+     */
+    function getColorForChoice(choice, shade = 'light') {
+        const colors = {
+            rock: { light: '#e74c3c', dark: '#c0392b' },
+            paper: { light: '#3498db', dark: '#2980b9' },
+            scissors: { light: '#2ecc71', dark: '#27ae60' }
+        };
+        
+        return colors[choice] ? colors[choice][shade] : '#6a5af9';
     }
     
     /**
@@ -232,8 +254,9 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function getResultAnimation(playerChoice, computerChoice, result) {
         if (result === 'tie') {
-            return `<div class="tie-animation">
+            return `<div class="tie-animation" style="animation: rubberBand 1s infinite; font-size: 28px; color: var(--primary-color);">
                 <i class="fas fa-equals"></i>
+                <span style="margin-left: 10px;">Equal Match</span>
             </div>`;
         }
         
@@ -249,27 +272,51 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Create specific animations based on the winning combination
         if (winnerChoice === 'rock' && loserChoice === 'scissors') {
-            return `<div class="win-animation">
-                <i class="fas fa-hand-rock"></i>
-                <span class="action-text">crushes</span>
-                <i class="fas fa-hand-scissors crush-victim"></i>
-            </div>`;
+            return createAnimationHTML('rock', 'crushes', 'scissors', 'rockCrush', 'getCrushed');
         } else if (winnerChoice === 'paper' && loserChoice === 'rock') {
-            return `<div class="win-animation">
-                <i class="fas fa-hand-paper"></i>
-                <span class="action-text">covers</span>
-                <i class="fas fa-hand-rock cover-victim"></i>
-            </div>`;
+            return createAnimationHTML('paper', 'covers', 'rock', 'paperCover', 'getCovered');
         } else if (winnerChoice === 'scissors' && loserChoice === 'paper') {
-            return `<div class="win-animation">
-                <i class="fas fa-hand-scissors"></i>
-                <span class="action-text">cuts</span>
-                <i class="fas fa-hand-paper cut-victim"></i>
-            </div>`;
+            return createAnimationHTML('scissors', 'cuts', 'paper', 'scissorsCut', 'getCut');
         }
         
         // Default animation as fallback
         return '';
+    }
+    
+    /**
+     * Create HTML for win animation with inline styles
+     * @param {string} winner - The winning choice
+     * @param {string} action - The action text
+     * @param {string} loser - The losing choice
+     * @param {string} winnerAnim - The winner animation name
+     * @param {string} loserAnim - The loser animation name
+     * @returns {string} HTML for the win animation
+     */
+    function createAnimationHTML(winner, action, loser, winnerAnim, loserAnim) {
+        const animations = {
+            rockCrush: 'transform: translate(0, 0) rotate(0deg); 50% { transform: translate(5px, 0) rotate(15deg); }',
+            paperCover: 'transform: translateY(0); 50% { transform: translateY(-5px) scale(1.1); }',
+            scissorsCut: 'transform: rotate(0deg); 50% { transform: rotate(-30deg); }',
+            getCrushed: 'transform: scale(1); opacity: 0.7; 50% { transform: scale(0.8); opacity: 0.4; }',
+            getCovered: 'transform: scale(1); opacity: 0.7; 50% { transform: scale(0.9); opacity: 0.3; }',
+            getCut: 'transform: rotate(0) scale(1); opacity: 0.7; 50% { transform: rotate(15deg) scale(0.9); opacity: 0.4; }'
+        };
+        
+        const colors = {
+            rock: 'var(--rock-color)',
+            paper: 'var(--paper-color)',
+            scissors: 'var(--scissors-color)'
+        };
+        
+        return `<div class="win-animation">
+            <i class="fas fa-hand-${winner}" style="color: ${colors[winner]}; animation: ${winnerAnim} 2s infinite;"></i>
+            <span class="action-text">${action}</span>
+            <i class="fas fa-hand-${loser}" style="color: ${colors[loser]}; opacity: 0.7; animation: ${loserAnim} 2s infinite;"></i>
+        </div>
+        <style>
+            @keyframes ${winnerAnim} { 0%, 100% { ${animations[winnerAnim]} } }
+            @keyframes ${loserAnim} { 0%, 100% { ${animations[loserAnim]} } }
+        </style>`;
     }
     
     /**
