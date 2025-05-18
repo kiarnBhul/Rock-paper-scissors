@@ -1,70 +1,105 @@
+/**
+ * Rock Paper Scissors Game
+ * A modern implementation with statistics tracking and data visualization
+ */
 document.addEventListener('DOMContentLoaded', function() {
-    // Game state variables
+    // ===== Game state variables =====
     let playerScore = 0;
     let computerScore = 0;
     let tieScore = 0;
-    let playerScoreEl = document.getElementById('playerScore');
-    let computerScoreEl = document.getElementById('computerScore');
-    let gameResultEl = document.getElementById('gameResult');
-    
-    // Stats tracking variables
-    let totalGames = 0;
     let currentStreak = 0;
     let highestStreak = 0;
+    let totalGames = 0;
+    
+    // Player moves tracking
     let playerMoves = {
         rock: 0,
         paper: 0,
         scissors: 0
     };
+    
+    // Game results tracking
     let gameResults = {
         win: 0,
         lose: 0,
         tie: 0
     };
     
-    // Add tie score display to the HTML
-    const scoreDisplay = document.querySelector('.score-display');
-    const tieScoreItem = document.createElement('div');
-    tieScoreItem.className = 'score-item';
-    tieScoreItem.innerHTML = `
-        <span class="score-label">Ties</span>
-        <span class="score-value" id="tieScore">0</span>
-    `;
-    scoreDisplay.appendChild(tieScoreItem);
-    const tieScoreEl = document.getElementById('tieScore');
+    // ===== DOM Elements =====
+    const playerScoreEl = document.getElementById('playerScore');
+    const computerScoreEl = document.getElementById('computerScore');
+    const gameResultEl = document.getElementById('gameResult');
     
-    // Get stats elements
+    // Stats elements
     const totalGamesEl = document.querySelector('.card:nth-child(1) h2');
     const winRateEl = document.querySelector('.card:nth-child(2) h2');
     const rankingEl = document.querySelector('.card:nth-child(3) h2');
     const streakEl = document.querySelector('.card:nth-child(4) h2');
-    
-    // Initialize charts
-    let moveChart = null;
-    let resultChart = null;
     
     // Choice buttons
     const rockBtn = document.getElementById('rock');
     const paperBtn = document.getElementById('paper');
     const scissorsBtn = document.getElementById('scissors');
     
-    // Event listeners for player choices
-    rockBtn.addEventListener('click', function() {
-        playGame('rock');
-        showButtonFeedback(this);
+    // Chart elements
+    const movesChartEl = document.getElementById('movesChart');
+    const resultsChartEl = document.getElementById('resultsChart');
+    
+    // Chart instances
+    let moveChart = null;
+    let resultChart = null;
+    
+    // Add tie score display to the HTML
+    const scoreDisplay = document.querySelector('.score-display');
+    if (scoreDisplay) {
+        const tieScoreItem = document.createElement('div');
+        tieScoreItem.className = 'score-item';
+        tieScoreItem.innerHTML = `
+            <span class="score-label">Ties</span>
+            <span class="score-value" id="tieScore">0</span>
+        `;
+        scoreDisplay.appendChild(tieScoreItem);
+    }
+    const tieScoreEl = document.getElementById('tieScore');
+    
+    // ===== Load game data from localStorage if available =====
+    loadGameData();
+    
+    // ===== Event Listeners =====
+    // Player choice buttons
+    if (rockBtn) {
+        rockBtn.addEventListener('click', function() {
+            playGame('rock');
+            showButtonFeedback(this);
+        });
+    }
+    
+    if (paperBtn) {
+        paperBtn.addEventListener('click', function() {
+            playGame('paper');
+            showButtonFeedback(this);
+        });
+    }
+    
+    if (scissorsBtn) {
+        scissorsBtn.addEventListener('click', function() {
+            playGame('scissors');
+            showButtonFeedback(this);
+        });
+    }
+    
+    // Add staggered animation to dashboard elements
+    const dashboardItems = document.querySelectorAll('.dashboard-content > *');
+    dashboardItems.forEach((item, index) => {
+        item.style.setProperty('--animation-order', index + 1);
     });
     
-    paperBtn.addEventListener('click', function() {
-        playGame('paper');
-        showButtonFeedback(this);
-    });
+    // ===== Game Functions =====
     
-    scissorsBtn.addEventListener('click', function() {
-        playGame('scissors');
-        showButtonFeedback(this);
-    });
-    
-    // Main game function
+    /**
+     * Main game function - handles the game logic when a player makes a choice
+     * @param {string} playerChoice - The player's choice (rock, paper, or scissors)
+     */
     function playGame(playerChoice) {
         // Get computer's choice
         const choices = ['rock', 'paper', 'scissors'];
@@ -86,26 +121,10 @@ document.addEventListener('DOMContentLoaded', function() {
         totalGames++;
         
         // Update streak
-        if (result === 'win') {
-            currentStreak++;
-            if (currentStreak > highestStreak) {
-                highestStreak = currentStreak;
-            }
-        } else {
-            currentStreak = 0;
-        }
+        updateStreak(result);
         
         // Update scores if necessary
-        if (result === 'win') {
-            playerScore++;
-            playerScoreEl.textContent = playerScore;
-        } else if (result === 'lose') {
-            computerScore++;
-            computerScoreEl.textContent = computerScore;
-        } else if (result === 'tie') {
-            tieScore++;
-            tieScoreEl.textContent = tieScore;
-        }
+        updateScores(result);
         
         // Update stats cards
         updateStatsCards();
@@ -115,9 +134,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add to recent activity
         addGameToHistory(playerChoice, computerChoice, result);
+        
+        // Save game data to localStorage
+        saveGameData();
     }
     
-    // Determine who wins the round
+    /**
+     * Determine the winner of a round based on player and computer choices
+     * @param {string} playerChoice - The player's choice
+     * @param {string} computerChoice - The computer's choice
+     * @returns {string} - The result: 'win', 'lose', or 'tie'
+     */
     function determineWinner(playerChoice, computerChoice) {
         if (playerChoice === computerChoice) {
             return 'tie';
@@ -134,11 +161,16 @@ document.addEventListener('DOMContentLoaded', function() {
         return 'lose';
     }
     
-    // Update game result message
+    /**
+     * Update the game result display with animation and detailed visuals
+     * @param {string} playerChoice - The player's choice
+     * @param {string} computerChoice - The computer's choice
+     * @param {string} result - The result of the round
+     */
     function updateGameResult(playerChoice, computerChoice, result) {
         // Create result container
         let resultHTML = `
-        <div class="result-container">
+        <div class="result-container page-transition">
             <div class="choices-display">
                 <div class="choice-display player">
                     <div class="choice-icon ${playerChoice}">
@@ -160,33 +192,70 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         `;
         
-        gameResultEl.innerHTML = resultHTML;
+        if (gameResultEl) {
+            gameResultEl.innerHTML = resultHTML;
+        }
     }
     
-    // Update stats cards with current data
+    /**
+     * Update player streak based on game result
+     * @param {string} result - The result of the round
+     */
+    function updateStreak(result) {
+        if (result === 'win') {
+            currentStreak++;
+            if (currentStreak > highestStreak) {
+                highestStreak = currentStreak;
+            }
+        } else {
+            currentStreak = 0;
+        }
+    }
+    
+    /**
+     * Update scores based on game result
+     * @param {string} result - The result of the round
+     */
+    function updateScores(result) {
+        if (result === 'win') {
+            playerScore++;
+            if (playerScoreEl) playerScoreEl.textContent = playerScore;
+        } else if (result === 'lose') {
+            computerScore++;
+            if (computerScoreEl) computerScoreEl.textContent = computerScore;
+        } else if (result === 'tie') {
+            tieScore++;
+            if (tieScoreEl) tieScoreEl.textContent = tieScore;
+        }
+    }
+    
+    /**
+     * Update stats cards with current game data
+     */
     function updateStatsCards() {
         // Update total games
-        totalGamesEl.textContent = totalGames;
+        if (totalGamesEl) totalGamesEl.textContent = totalGames;
         
         // Calculate and update win rate
         const winRate = totalGames > 0 ? Math.round((gameResults.win / totalGames) * 100) : 0;
-        winRateEl.textContent = `${winRate}%`;
+        if (winRateEl) winRateEl.textContent = `${winRate}%`;
         
         // Determine ranking based on win rate
         let ranking = 'Beginner';
         if (winRate >= 65) ranking = 'Master';
         else if (winRate >= 50) ranking = 'Expert';
         else if (winRate >= 35) ranking = 'Intermediate';
-        rankingEl.textContent = ranking;
+        if (rankingEl) rankingEl.textContent = ranking;
         
         // Update streak
-        streakEl.textContent = highestStreak;
+        if (streakEl) streakEl.textContent = highestStreak;
     }
     
-    // Initialize and update charts
+    /**
+     * Initialize and update charts with current game data
+     */
     function updateCharts() {
-        const movesChartEl = document.getElementById('movesChart');
-        const resultsChartEl = document.getElementById('resultsChart');
+        if (!movesChartEl || !resultsChartEl) return;
         
         // Clear placeholders
         movesChartEl.innerHTML = '';
@@ -217,14 +286,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     label: 'Times Used',
                     data: [playerMoves.rock, playerMoves.paper, playerMoves.scissors],
                     backgroundColor: [
-                        'rgba(255, 118, 117, 0.7)',
-                        'rgba(116, 185, 255, 0.7)',
-                        'rgba(85, 239, 196, 0.7)'
+                        'rgba(231, 76, 60, 0.7)',
+                        'rgba(52, 152, 219, 0.7)',
+                        'rgba(46, 204, 113, 0.7)'
                     ],
                     borderColor: [
-                        'rgb(255, 118, 117)',
-                        'rgb(116, 185, 255)',
-                        'rgb(85, 239, 196)'
+                        'rgb(231, 76, 60)',
+                        'rgb(52, 152, 219)',
+                        'rgb(46, 204, 113)'
                     ],
                     borderWidth: 1
                 }]
@@ -232,6 +301,25 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        padding: 10,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -266,14 +354,46 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false
+                maintainAspectRatio: false,
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 1000,
+                    easing: 'easeOutCirc'
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        padding: 10,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
+                    }
+                }
             }
         });
     }
     
-    // Add game to history
+    /**
+     * Add game result to the history/recent activity section
+     * @param {string} playerChoice - The player's choice
+     * @param {string} computerChoice - The computer's choice
+     * @param {string} result - The result of the round
+     */
     function addGameToHistory(playerChoice, computerChoice, result) {
         const activityList = document.querySelector('.activity-list');
+        if (!activityList) return;
         
         // Clear empty state if it exists
         const emptyState = activityList.querySelector('.empty-state');
@@ -296,8 +416,17 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="activity-time">Just now</div>
         `;
         
-        // Add to the top of the list
+        // Add to the top of the list with animation
+        historyItem.style.opacity = '0';
+        historyItem.style.transform = 'translateY(-10px)';
         activityList.insertBefore(historyItem, activityList.firstChild);
+        
+        // Trigger animation
+        setTimeout(() => {
+            historyItem.style.transition = 'all 0.3s ease-out';
+            historyItem.style.opacity = '1';
+            historyItem.style.transform = 'translateY(0)';
+        }, 10);
         
         // Limit history to 5 items
         const items = activityList.querySelectorAll('.activity-item');
@@ -306,7 +435,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Function for visual feedback when buttons are clicked
+    /**
+     * Visual feedback when buttons are clicked
+     * @param {HTMLElement} button - The button that was clicked
+     */
     function showButtonFeedback(button) {
         // Add a brief highlight effect
         button.classList.add('active-choice');
@@ -317,23 +449,118 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 200);
     }
     
-    // Mobile Sidebar Toggle Functionality
+    /**
+     * Save game data to localStorage
+     */
+    function saveGameData() {
+        const gameData = {
+            playerScore,
+            computerScore,
+            tieScore,
+            totalGames,
+            highestStreak,
+            playerMoves,
+            gameResults
+        };
+        
+        localStorage.setItem('rpsGameData', JSON.stringify(gameData));
+    }
+    
+    /**
+     * Load game data from localStorage
+     */
+    function loadGameData() {
+        const savedData = localStorage.getItem('rpsGameData');
+        if (!savedData) return;
+        
+        try {
+            const gameData = JSON.parse(savedData);
+            
+            // Restore game state
+            playerScore = gameData.playerScore || 0;
+            computerScore = gameData.computerScore || 0;
+            tieScore = gameData.tieScore || 0;
+            totalGames = gameData.totalGames || 0;
+            highestStreak = gameData.highestStreak || 0;
+            
+            // Restore move tracking
+            if (gameData.playerMoves) {
+                playerMoves = gameData.playerMoves;
+            }
+            
+            // Restore result tracking
+            if (gameData.gameResults) {
+                gameResults = gameData.gameResults;
+            }
+            
+            // Update UI with loaded data
+            if (playerScoreEl) playerScoreEl.textContent = playerScore;
+            if (computerScoreEl) computerScoreEl.textContent = computerScore;
+            if (tieScoreEl) tieScoreEl.textContent = tieScore;
+            
+            // Update stats and charts
+            updateStatsCards();
+            updateCharts();
+            
+        } catch (error) {
+            console.error('Error loading game data:', error);
+        }
+    }
+    
+    // ===== UI Helpers =====
+    
+    /**
+     * Mobile Sidebar Toggle Functionality
+     */
     function checkWindowSize() {
         const sidebar = document.querySelector('.sidebar');
         const mainContent = document.querySelector('.main-content');
         const navLinks = document.querySelectorAll('.nav-links li a span');
         const logo = document.querySelector('.logo h2');
+        const profileInfo = document.querySelector('.profile-info');
+        const menuLabels = document.querySelectorAll('.menu-label');
+        const sidebarFooter = document.querySelector('.sidebar-footer');
 
         if (window.innerWidth <= 768) {
-            sidebar.style.width = '70px';
-            mainContent.style.marginLeft = '70px';
-            navLinks.forEach(span => span.style.display = 'none');
-            logo.style.display = 'none';
+            if (sidebar) sidebar.style.width = '70px';
+            if (mainContent) mainContent.style.marginLeft = '70px';
+            
+            // Hide text elements in sidebar
+            [navLinks, logo, profileInfo, menuLabels, sidebarFooter].forEach(elements => {
+                if (elements) {
+                    if (elements.forEach) {
+                        elements.forEach(el => {
+                            if (el) el.style.display = 'none';
+                        });
+                    } else {
+                        elements.style.display = 'none';
+                    }
+                }
+            });
+            
+            // Center profile image
+            const profileSection = document.querySelector('.profile-section');
+            if (profileSection) {
+                profileSection.style.justifyContent = 'center';
+                profileSection.style.padding = '10px';
+            }
         } else {
-            sidebar.style.width = 'var(--sidebar-width)';
-            mainContent.style.marginLeft = 'var(--sidebar-width)';
-            navLinks.forEach(span => span.style.display = 'inline');
-            logo.style.display = 'block';
+            if (sidebar) sidebar.style.width = 'var(--sidebar-width)';
+            if (mainContent) mainContent.style.marginLeft = 'var(--sidebar-width)';
+            
+            // Show text elements in sidebar
+            if (navLinks) navLinks.forEach(span => { if (span) span.style.display = 'inline'; });
+            if (logo) logo.style.display = 'block';
+            if (profileInfo) profileInfo.style.display = 'block';
+            if (menuLabels) menuLabels.forEach(label => { if (label) label.style.display = 'block'; });
+            if (sidebarFooter) sidebarFooter.style.display = 'block';
+            
+            // Reset profile section
+            const profileSection = document.querySelector('.profile-section');
+            if (profileSection) {
+                profileSection.style.justifyContent = 'flex-start';
+                profileSection.style.padding = '15px';
+            }
         }
     }
 
@@ -346,134 +573,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add active class to nav items on click
     const navItems = document.querySelectorAll('.nav-links li');
     navItems.forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function(e) {
+            // Don't add active class if it's an external link
+            if (e.currentTarget.querySelector('a').getAttribute('target') === '_blank') {
+                return;
+            }
+            
             navItems.forEach(navItem => navItem.classList.remove('active'));
             this.classList.add('active');
         });
     });
     
-    // Add CSS for the game styling
-    const style = document.createElement('style');
-    style.textContent = `
-        .active-choice {
-            transform: scale(0.95);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-        }
-        
-        .result-container {
-            background-color: #f8f9fa;
-            border-radius: 12px;
-            padding: 15px;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        
-        .choices-display {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .choice-display {
-            text-align: center;
-            flex: 1;
-        }
-        
-        .choice-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            font-size: 24px;
-        }
-        
-        .choice-icon.rock {
-            background-color: #ff7675;
-            color: white;
-        }
-        
-        .choice-icon.paper {
-            background-color: #74b9ff;
-            color: white;
-        }
-        
-        .choice-icon.scissors {
-            background-color: #55efc4;
-            color: white;
-        }
-        
-        .versus {
-            font-weight: bold;
-            font-size: 20px;
-            margin: 0 15px;
-            color: #636e72;
-        }
-        
-        .result-banner {
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1.3em;
-            margin-top: 10px;
-        }
-        
-        .result-banner.win {
-            background-color: #b8e994;
-            color: #1e441e;
-        }
-        
-        .result-banner.lose {
-            background-color: #ffcccc;
-            color: #5c2626;
-        }
-        
-        .result-banner.tie {
-            background-color: #dfe6e9;
-            color: #2d3436;
-        }
-        
-        /* Activity list styles */
-        .activity-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .activity-result {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            margin-right: 10px;
-            font-size: 0.85em;
-        }
-        
-        .activity-result.win {
-            background-color: #e3fcef;
-            color: #1e441e;
-        }
-        
-        .activity-result.lose {
-            background-color: #fee7e7;
-            color: #5c2626;
-        }
-        
-        .activity-result.tie {
-            background-color: #e6eaee;
-            color: #2d3436;
-        }
-        
-        .activity-time {
-            color: #a0a0a0;
-            font-size: 0.85em;
-        }
-    `;
-    document.head.appendChild(style);
+    // Initial chart update if we have game data
+    if (totalGames > 0) {
+        updateCharts();
+    }
 }); 
