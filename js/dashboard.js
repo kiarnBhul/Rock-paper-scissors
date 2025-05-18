@@ -168,33 +168,108 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {string} result - The result of the round
      */
     function updateGameResult(playerChoice, computerChoice, result) {
-        // Create result container
+        // Create result container with enhanced design
         let resultHTML = `
         <div class="result-container page-transition">
+            <div class="result-header">
+                <div class="result-banner ${result}">
+                    ${result === 'win' ? 'You win!' : result === 'lose' ? 'Computer wins!' : 'It\'s a tie!'}
+                </div>
+            </div>
             <div class="choices-display">
                 <div class="choice-display player">
                     <div class="choice-icon ${playerChoice}">
                         <i class="fas fa-hand-${playerChoice}"></i>
                     </div>
-                    <p>You chose <strong>${playerChoice}</strong></p>
+                    <div class="choice-label">
+                        <span class="choice-owner">You</span>
+                        <span class="choice-text">chose <strong>${playerChoice}</strong></span>
+                    </div>
                 </div>
-                <div class="versus">VS</div>
+                <div class="versus-container">
+                    <div class="versus-circle">VS</div>
+                    <div class="versus-line"></div>
+                </div>
                 <div class="choice-display computer">
                     <div class="choice-icon ${computerChoice}">
                         <i class="fas fa-hand-${computerChoice}"></i>
                     </div>
-                    <p>Computer chose <strong>${computerChoice}</strong></p>
+                    <div class="choice-label">
+                        <span class="choice-owner">Computer</span>
+                        <span class="choice-text">chose <strong>${computerChoice}</strong></span>
+                    </div>
                 </div>
             </div>
-            <div class="result-banner ${result}">
-                ${result === 'win' ? 'You win!' : result === 'lose' ? 'Computer wins!' : 'It\'s a tie!'}
+            <div class="result-animation">
+                ${getResultAnimation(playerChoice, computerChoice, result)}
             </div>
         </div>
         `;
         
         if (gameResultEl) {
             gameResultEl.innerHTML = resultHTML;
+            
+            // Add animation classes after a short delay
+            setTimeout(() => {
+                const icons = gameResultEl.querySelectorAll('.choice-icon');
+                icons.forEach(icon => icon.classList.add('animated'));
+                
+                const resultAnimation = gameResultEl.querySelector('.result-animation');
+                if (resultAnimation) resultAnimation.classList.add('animated');
+                
+                const versusCircle = gameResultEl.querySelector('.versus-circle');
+                if (versusCircle) versusCircle.classList.add('animated');
+            }, 100);
         }
+    }
+    
+    /**
+     * Generate the appropriate animation for the result
+     * @param {string} playerChoice - The player's choice
+     * @param {string} computerChoice - The computer's choice
+     * @param {string} result - The result of the game
+     * @returns {string} HTML for the result animation
+     */
+    function getResultAnimation(playerChoice, computerChoice, result) {
+        if (result === 'tie') {
+            return `<div class="tie-animation">
+                <i class="fas fa-equals"></i>
+            </div>`;
+        }
+        
+        // For win or lose, show the winning action
+        let winnerChoice, loserChoice;
+        if (result === 'win') {
+            winnerChoice = playerChoice;
+            loserChoice = computerChoice;
+        } else {
+            winnerChoice = computerChoice;
+            loserChoice = playerChoice;
+        }
+        
+        // Create specific animations based on the winning combination
+        if (winnerChoice === 'rock' && loserChoice === 'scissors') {
+            return `<div class="win-animation">
+                <i class="fas fa-hand-rock"></i>
+                <span class="action-text">crushes</span>
+                <i class="fas fa-hand-scissors crush-victim"></i>
+            </div>`;
+        } else if (winnerChoice === 'paper' && loserChoice === 'rock') {
+            return `<div class="win-animation">
+                <i class="fas fa-hand-paper"></i>
+                <span class="action-text">covers</span>
+                <i class="fas fa-hand-rock cover-victim"></i>
+            </div>`;
+        } else if (winnerChoice === 'scissors' && loserChoice === 'paper') {
+            return `<div class="win-animation">
+                <i class="fas fa-hand-scissors"></i>
+                <span class="action-text">cuts</span>
+                <i class="fas fa-hand-paper cut-victim"></i>
+            </div>`;
+        }
+        
+        // Default animation as fallback
+        return '';
     }
     
     /**
